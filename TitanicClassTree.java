@@ -67,21 +67,60 @@ class ReadCSV {
     }
 }
 
-// Main class
-class TitanicClassTree {
-    public static void main(String args[]) {
-        Observation[] observations = ReadCSV.readCSV("train1.csv", 891);
-        int survived = 0;
-        int died = 0;
+// Node object
+class Node {
+    private int survived, total;
+    private double p_survived, impurity;
+    
+    Node(Observation[] array) {
+        Observation[] observations = array;
+        
+        survived = 0;
+        total = observations.length;
+
         for(Observation x : observations) {
             if(x.survived())
                 survived += 1;
-            else
-                died += 1;
         }
 
-        System.out.println("Survived: " + survived);
-        System.out.println("Died: " + died);
+        p_survived = (double) survived / (double) total;
+        impurity = 2 * p_survived * (1 - p_survived);
+    } 
+    
+    public double getTotal() {
+        return total;
+    }
 
+    public double getImpurity() {
+        return impurity;
+    }
+
+    public double getPropSurv() {
+        return p_survived;
+    }
+
+
+//    private ArrayList<Integer> getPossibleSplits(Observation array[], int column) {
+//        Observation[] node_obs = array;
+//        int var_num = column;
+//        ArrayList<Integer> uniq_vals = new ArrayList();
+//        
+//        for(Observation x : node_obs) {
+//            if(x
+}
+            
+            
+        
+
+
+// Main class
+class TitanicClassTree {
+    public static void main(String args[]) {
+        Observation[] observations = ReadCSV.readCSV("train_wo_header.csv", 891);
+        
+        Node root = new Node(observations);
+        System.out.println("Total: " + root.getTotal());
+        System.out.println("Proportion Surviving: " + root.getPropSurv());
+        System.out.println("Impurity: " + root.getImpurity());
     }
 }
