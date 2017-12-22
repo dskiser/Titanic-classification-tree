@@ -90,9 +90,20 @@ class Splits {
     }
 
     // Get split options if column is categorical
-//    public static String[] getCatSplitOptions(String[][] data, int column_num) {
-//        String[] uniqStrVals;
-//    }
+    public static String[] getCatSplitOptions(String[][] data, int column_num) {
+        String[] splitOptions;
+        String[] uniqValues;
+        String[] column;
+
+        column = getColumn(data, column_num);
+        uniqValues = getUniqueVals(column);
+
+        // Note: May want to return later and make this method work for categorical
+        // variables that contain more than three categories
+        splitOptions = uniqValues;
+
+        return splitOptions;
+    }
 
     
     // Get split options if column is numerical
@@ -123,6 +134,11 @@ class TitanicClassTree {
         double[] age = Splits.getNumSplitOptions(data, 5);
         for(int i = 0; i<age.length; i++)
             System.out.print(age[i] + " ");
+        System.out.println();
+
+        String[] pclass = Splits.getCatSplitOptions(data, 2);
+        for(int i = 0; i<pclass.length; i++)
+            System.out.println(pclass[i] + " ");
         System.out.println();
 
     }
