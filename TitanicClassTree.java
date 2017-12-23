@@ -30,12 +30,13 @@ class ReadCSV {
 class Node {
     private int survived, obsAtNode;
     private double p_survived, impurity;
-    private Split[] allSplits;
+    private String node_name;
     private String[][] node_data;
     
-    Node(String[][] data) {
+    Node(String[][] data, String name) {
         node_data = data;
-        
+        node_name = name;
+
         survived = 0;
         obsAtNode = node_data.length;
 
@@ -69,10 +70,15 @@ class Node {
     double[] split_optionsNum;
     String[] split_optionsCat;
     double max_gini = 0.0;
+    // Variable that is 1 if max_gini is from split on numerical variable and
+    // 0 if max_gini is from split on categorical variable.
+    int numORcat;
     Split new_split;
     Split chosenSplit;
+    String chosenVar;
     // Recursive method to split nodes down to a specified purity level.
     public void chooseSplit(Variable[] variables, int num_observations) {
+
         for(Variable x : variables) {
             if(x.column_type.compareTo("numerical") == 0) {
                 split_optionsNum = Split.getNumSplitOptions(node_data, x.column_num);
@@ -80,15 +86,14 @@ class Node {
                 // node.
                 if(split_optionsNum.length > 1) {
                     for(double y : split_optionsNum) {
-                        new_split = new Split(y, x.column_num, node_data, impurity);
+                        new_split = new Split(y, x.column_num, node_data, impurity,
+                                node_name);
                         if((new_split.gini >= max_gini) & (new_split != null)) {
                             chosenSplit = new_split;
                             max_gini = chosenSplit.gini;
+                            numORcat = 1;
+                            chosenVar = x.column_name;
                         }
-                        if(new_split != null)
-                            System.out.println("New split gini: " + new_split.gini
-                                + "Chosen split gini: " + chosenSplit.gini);
-                    
                     }
                 }
             }
@@ -97,25 +102,54 @@ class Node {
                 // Do not try to split on category if only one category present in node
                 if(split_optionsCat.length > 1) {
                     for(String y : split_optionsCat) {
-                        new_split = new Split(y, x.column_num, node_data, impurity);
+                        new_split = new Split(y, x.column_num, node_data, impurity,
+                                node_name);
                         if(new_split.gini >= max_gini) {
                             chosenSplit = new_split;
                             max_gini = chosenSplit.gini;
+                            numORcat = 0;
+                            chosenVar = x.column_name;
                         }
-                        System.out.println("New split gini: " + new_split.gini
-                                + "Chosen split gini: " + chosenSplit.gini);
-                
                     }
                 }
            }
         }
-        System.out.println(chosenSplit.split_valueNum);
+
+        // Output
+        System.out.println("Node name: " + node_name + " Impurity: " + impurity);
+        if(numORcat == 1) 
+            System.out.println("Chosen Split Value: " + chosenVar + " < "
+                    + chosenSplit.split_valueNum);
+        else
+            System.out.println("Chosen Split Value: " + chosenVar + " = "
+                    + chosenSplit.split_valueCat);
         System.out.println("Left Split Impurity: " + chosenSplit.left.getImpurity());
         System.out.println("Right Split Impurity: " + chosenSplit.right.getImpurity());
-        if(chosenSplit.left.node_data.length >= num_observations)
+        System.out.println();
+
+        // Continue splitting node if conditions are met.
+        if((chosenSplit.left.node_data.length >= num_observations) &
+                (chosenSplit.left.getImpurity() > 0.0))
             chosenSplit.left.chooseSplit(variables, num_observations);
-        if(chosenSplit.right.node_data.length >= num_observations)
+        else {
+            // If splitting conditions not met, output terminal node information.
+            chosenSplit.left.node_name = chosenSplit.left.node_name + "terminal";
+            System.out.println("Node name: " + chosenSplit.left.node_name 
+                    + " Impurity: " + chosenSplit.left.impurity +
+                    " Observations: " + chosenSplit.left.node_data.length);
+            System.out.println();
+        }
+        if((chosenSplit.right.node_data.length >= num_observations) &
+                (chosenSplit.right.getImpurity() > 0.0))
             chosenSplit.right.chooseSplit(variables, num_observations);
+        else {
+            // If splitting conditions not met, output terminal node information.
+            chosenSplit.right.node_name = chosenSplit.right.node_name + "terminal";
+            System.out.println("Node name: " + chosenSplit.right.node_name
+                    + " Impurity: " + chosenSplit.right.impurity +
+                    " Observations: " + chosenSplit.right.node_data.length);
+            System.out.println();
+        }
     }
 }
 
@@ -125,14 +159,15 @@ class Split {
     int variable, num_left, num_right, countL, countR, leftORright;
     String[][] parent_data, nodeLdata, nodeRdata;
     Node left, right;
-    String split_valueCat;
+    String split_valueCat, parent_name;
 
     // Constructor for Split object if value is numerical.
-    Split(double value, int column_num, String[][] data, double impurity) {
+    Split(double value, int column_num, String[][] data, double impurity, String name) {
         split_valueNum = value;
         variable = column_num;
         parent_data = data;
         parent_impurity = impurity;
+        parent_name = name;
 
         // Calculate number of observations in left node and right node.
         num_left = 0;
@@ -205,8 +240,8 @@ class Split {
         }
 
         // Create new nodes.
-        left = new Node(nodeLdata);
-        right = new Node(nodeRdata);
+        left = new Node(nodeLdata, parent_name + "1");
+        right = new Node(nodeRdata, parent_name + "0");
 
         // Calculate gini diversity index for split.
         pleft = ((double) num_left / parent_data.length);
@@ -217,11 +252,13 @@ class Split {
     }
 
     // Constructor for Split object if value is categorical.
-    Split(String value, int column_num, String[][] data, double impurity) {
+    Split(String value, int column_num, String[][] data, double impurity,
+            String name) {
         split_valueCat = value;
         variable = column_num;
         parent_data = data;
         parent_impurity = impurity;
+        parent_name = name;
 
         // Calculate number of observations in left node and right node.
         num_left = 0;
@@ -292,8 +329,8 @@ class Split {
         }
 
         // Create new nodes.
-        left = new Node(nodeLdata);
-        right = new Node(nodeRdata);
+        left = new Node(nodeLdata, parent_name + "1");
+        right = new Node(nodeRdata, parent_name + "0");
 
         // Calculate gini diversity index for split.
         pleft = ((double) num_left / parent_data.length);
@@ -317,7 +354,6 @@ class Split {
 
         Set<String> uniqVals = new LinkedHashSet<String>();
         for(String x : column) {
-            System.out.print(x);
             // Ensure that blank values are not included as split option
             if(x.compareTo("") != 0)
                 uniqVals.add(x);
@@ -397,9 +433,9 @@ class TitanicClassTree {
         variableList[6] = new Variable(11, "categorical", "Embark");
 
         // Create root node.
-        Node root = new Node(data);
+        Node root = new Node(data, "root");
 
         // Begin splitting.
-        root.chooseSplit(variableList, 20);
+        root.chooseSplit(variableList, 10);
     }
 }
