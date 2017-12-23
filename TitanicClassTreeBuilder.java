@@ -416,7 +416,7 @@ class Variable {
 
 
 // Main class
-class TitanicClassTree {
+class TitanicClassTreeBuilder {
     public static void main(String args[]) {
         Variable[] variableList = new Variable[7];
 
