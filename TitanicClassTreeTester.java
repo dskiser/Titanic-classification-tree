@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.*;
 
 // Read CSV
-class ReadCSV {
+class ReadCSVTester {
     public static int rows, columns;
 
     public static String[][] readCSV(String file, int lines, int variables,
@@ -192,12 +192,12 @@ class TitanicClassTreeTester {
         variableList[7] = new Variable(10, "categorical", "Embark");
         
         // Read data from Titanic CSV into 2-dimensional array.
-        String[][] data = ReadCSV.readCSV("test_wo_header.csv", 418, 11,
+        String[][] data = ReadCSVTester.readCSV("test_wo_header.csv", 418, 11,
                 variableList);
         
-        try(FileWriter fw = new FileWriter("submission1.txt", true)) {
+        try(FileWriter fw = new FileWriter("submission7.txt", true)) {
             fw.write("PassengerId,Survived\n");
-            for(int n=0; n<ReadCSV.rows; n++) {
+            for(int n=0; n<ReadCSVTester.rows; n++) {
                 classification = Classify.observation(data, n, test_model,
                     "root", variableList);
                 id = data[n][0];

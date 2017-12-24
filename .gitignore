@@ -1,3 +1,4 @@
 *.class
 .TitanicClassTree*
-model*.txt
+*.txt
+

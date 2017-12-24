@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.*;
 
 // Read CSV
-class ReadCSV {
+class ReadCSVBuilder {
     public static int rows, columns;
 
     public static String[][] readCSV(String file, int lines, int variables) {
@@ -83,7 +83,7 @@ class Node {
     double prob_obs_reach_node;
     public double pMisclass(int survived) {
         prob_obs_reach_node = (double) node_data.length / 
-            (double) ReadCSV.rows;
+            (double) ReadCSVBuilder.rows;
         if(survived != 1)
             prob_obs_miscl = (double) this.getSurvived() / (double) node_data.length;
         else
@@ -238,8 +238,8 @@ class Split {
         }
 
         // Create datasets for left and right nodes.
-        nodeLdata = new String[num_left][ReadCSV.columns];
-        nodeRdata = new String[num_right][ReadCSV.columns];
+        nodeLdata = new String[num_left][ReadCSVBuilder.columns];
+        nodeRdata = new String[num_right][ReadCSVBuilder.columns];
         countL = -1;
         countR = -1;
         leftORright = 0;
@@ -248,14 +248,14 @@ class Split {
             if(parent_data[n][variable].compareTo("") == 0) {
                 if(leftORright == 0) {
                     countL++;
-                    for(int p=0; p<ReadCSV.columns; p++) {
+                    for(int p=0; p<ReadCSVBuilder.columns; p++) {
                         nodeLdata[countL][p] = parent_data[n][p];
                         leftORright = 1;
                     }
                 }
                 else {
                     countR++;
-                    for(int p=0; p<ReadCSV.columns; p++) { 
+                    for(int p=0; p<ReadCSVBuilder.columns; p++) { 
                         nodeRdata[countR][p] = parent_data[n][p];
                          leftORright = 0;
                     }
@@ -265,7 +265,7 @@ class Split {
             else if(Double.parseDouble(parent_data[n][variable])
                     <= split_valueNum) {
               countL++;  
-              for(int p=0; p<ReadCSV.columns; p++) {
+              for(int p=0; p<ReadCSVBuilder.columns; p++) {
                   nodeLdata[countL][p] = parent_data[n][p];
               }
             }
@@ -273,7 +273,7 @@ class Split {
             // to right node.
             else {
               countR++;
-              for(int p=0; p<ReadCSV.columns; p++) {
+              for(int p=0; p<ReadCSVBuilder.columns; p++) {
                   nodeRdata[countR][p] = parent_data[n][p];
               }
             }
@@ -328,8 +328,8 @@ class Split {
         }
 
         // Create datasets for left and right nodes.
-        nodeLdata = new String[num_left][ReadCSV.columns];
-        nodeRdata = new String[num_right][ReadCSV.columns];
+        nodeLdata = new String[num_left][ReadCSVBuilder.columns];
+        nodeRdata = new String[num_right][ReadCSVBuilder.columns];
         countL = -1;
         countR = -1;
         leftORright = 0;
@@ -338,14 +338,14 @@ class Split {
             if(parent_data[n][variable].compareTo("") == 0) {
                 if(leftORright == 0) {
                     countL++;
-                    for(int p=0; p<ReadCSV.columns; p++) {
+                    for(int p=0; p<ReadCSVBuilder.columns; p++) {
                         nodeLdata[countL][p] = parent_data[n][p];
                         leftORright = 1;
                     }
                 }
                 else {
                     countR++;
-                    for(int p=0; p<ReadCSV.columns; p++) { 
+                    for(int p=0; p<ReadCSVBuilder.columns; p++) { 
                         nodeRdata[countR][p] = parent_data[n][p];
                          leftORright = 0;
                     }
@@ -354,7 +354,7 @@ class Split {
             // If value is same as split value, send observation to left node.
             else if(parent_data[n][variable].compareTo(split_valueCat) == 0) {
               countL++;  
-              for(int p=0; p<ReadCSV.columns; p++) {
+              for(int p=0; p<ReadCSVBuilder.columns; p++) {
                   nodeLdata[countL][p] = parent_data[n][p];
               }
             }
@@ -362,7 +362,7 @@ class Split {
             // to right node.
             else {
               countR++;
-              for(int p=0; p<ReadCSV.columns; p++) {
+              for(int p=0; p<ReadCSVBuilder.columns; p++) {
                   nodeRdata[countR][p] = parent_data[n][p];
               }
             }
@@ -461,7 +461,7 @@ class TitanicClassTreeBuilder {
         Variable[] variableList = new Variable[7];
 
         // Read data from Titanic CSV into 2-dimensional array.
-        String[][] data = ReadCSV.readCSV("train_wo_header.csv", 891, 12);
+        String[][] data = ReadCSVBuilder.readCSV("train_wo_header.csv", 891, 12);
 
         // Create Variable objects.
         variableList[0] = new Variable(2, "categorical", "Pclass");
@@ -476,8 +476,8 @@ class TitanicClassTreeBuilder {
         Node root = new Node(data, "root");
 
         // Begin splitting.
-        try(FileWriter fw = new FileWriter("model1.txt", true)) {
-            root.chooseSplit(variableList, 5, fw);
+        try(FileWriter fw = new FileWriter("model7.txt", true)) {
+            root.chooseSplit(variableList, 125, fw);
             // Show misclassification probability.
             fw.write("Misclassification probability for model: " 
                     + Node.misclass_prob);
