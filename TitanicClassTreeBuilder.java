@@ -143,13 +143,13 @@ class Node {
            }
        }
         try {
-        fw.write("Node name: " + node_name + " Impurity: " + impurity + "\n");
+        fw.write("#" + node_name + "\nImpurity: " + impurity + "\n");
         if(numORcat == 1) 
-            fw.write("Chosen Split Value: " + chosenVar + " < "
-                + chosenSplit.split_valueNum + "\n");
+            fw.write("Chosen Split Type:\n$" + chosenVar + "\nChosen Split Value:\n%" + 
+                    chosenSplit.split_valueNum + "\n");
         else
-            fw.write("Chosen Split Value: " + chosenVar + " = "
-                + chosenSplit.split_valueCat + "\n");
+            fw.write("Chosen Split Value:\n$" + chosenVar + "\nChosen Split Value:\n%" +
+                chosenSplit.split_valueCat + "\n");
         fw.write("Left Split Impurity: " + chosenSplit.left.getImpurity()+ "\n");
         fw.write("Right Split Impurity: " + chosenSplit.right.getImpurity() + "\n");
         fw.write("\n");
@@ -163,10 +163,10 @@ class Node {
             try {
            // If splitting conditions not met, output terminal node information.
             chosenSplit.left.node_name = chosenSplit.left.node_name + "terminal";
-            fw.write("Node name: " + chosenSplit.left.node_name 
-               + " Impurity: " + chosenSplit.left.impurity +
+            fw.write("#" + chosenSplit.left.node_name 
+               + "\nImpurity: " + chosenSplit.left.impurity +
                " Observations: " + chosenSplit.left.node_data.length + "\n");
-            fw.write("Assigned Category: " + chosenSplit.left.assignedCat() + "\n");
+            fw.write("Assigned Category:\n^" + chosenSplit.left.assignedCat() + "\n");
             fw.write("\n");
             // Sum up misclassification probability.
             misclass_prob += chosenSplit.left.pMisclass(chosenSplit.left.assignedCat());
@@ -179,10 +179,10 @@ class Node {
             try {
             // If splitting conditions not met, output terminal node information.
             chosenSplit.right.node_name = chosenSplit.right.node_name + "terminal";
-            fw.write("Node name: " + chosenSplit.right.node_name
-               + " Impurity: " + chosenSplit.right.impurity +
+            fw.write("#" + chosenSplit.right.node_name
+               + "\nImpurity: " + chosenSplit.right.impurity +
                " Observations: " + chosenSplit.right.node_data.length + "\n");
-            fw.write("Assigned Category: " + chosenSplit.right.assignedCat() + "\n");
+            fw.write("Assigned Category:\n^" + chosenSplit.right.assignedCat() + "\n");
             fw.write("\n");
             // Sum up misclassification probability.
             misclass_prob += chosenSplit.right.pMisclass(
