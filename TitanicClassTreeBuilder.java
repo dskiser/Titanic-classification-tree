@@ -28,6 +28,7 @@ class ReadCSV {
 
 // Node object
 class Node {
+    public static double misclass_prob = 0;
     private int survived, obsAtNode;
     private double p_survived, impurity;
     private String node_name;
@@ -66,6 +67,32 @@ class Node {
     public int getSurvived() {
         return survived;
     }
+
+    // Methods intended to return information about a terminal node.
+    // Assign a terminal node a category.
+    public int assignedCat() {
+        if(p_survived >= (1 - p_survived))
+            return 1;
+        else
+            return 0;
+    }
+    // Determine a terminal node's contribution to the probability of misclassification for
+    // the tree.
+    double prob_miscl_contr;
+    double prob_obs_miscl;
+    double prob_obs_reach_node;
+    public double pMisclass(int survived) {
+        prob_obs_reach_node = (double) node_data.length / 
+            (double) ReadCSV.rows;
+        if(survived != 1)
+            prob_obs_miscl = (double) this.getSurvived() / (double) node_data.length;
+        else
+            prob_obs_miscl = (double) (node_data.length - this.getSurvived()) /
+                    (double) node_data.length;
+        prob_miscl_contr = prob_obs_reach_node * prob_obs_miscl;
+
+        return prob_miscl_contr;
+    }
     
     double[] split_optionsNum;
     String[] split_optionsCat;
@@ -77,8 +104,9 @@ class Node {
     Split chosenSplit;
     String chosenVar;
     // Recursive method to split nodes down to a specified purity level.
-    public void chooseSplit(Variable[] variables, int num_observations) {
-
+    public void chooseSplit(Variable[] variables, int num_observations, FileWriter fw)
+        throws IOException {
+        try {
         for(Variable x : variables) {
             if(x.column_type.compareTo("numerical") == 0) {
                 split_optionsNum = Split.getNumSplitOptions(node_data, x.column_num);
@@ -103,7 +131,7 @@ class Node {
                 if(split_optionsCat.length > 1) {
                     for(String y : split_optionsCat) {
                         new_split = new Split(y, x.column_num, node_data, impurity,
-                                node_name);
+                               node_name);
                         if(new_split.gini >= max_gini) {
                             chosenSplit = new_split;
                             max_gini = chosenSplit.gini;
@@ -113,43 +141,55 @@ class Node {
                     }
                 }
            }
-        }
-
-        // Output
-        System.out.println("Node name: " + node_name + " Impurity: " + impurity);
+       }
+        try {
+        fw.write("Node name: " + node_name + " Impurity: " + impurity + "\n");
         if(numORcat == 1) 
-            System.out.println("Chosen Split Value: " + chosenVar + " < "
-                    + chosenSplit.split_valueNum);
+            fw.write("Chosen Split Value: " + chosenVar + " < "
+                + chosenSplit.split_valueNum + "\n");
         else
-            System.out.println("Chosen Split Value: " + chosenVar + " = "
-                    + chosenSplit.split_valueCat);
-        System.out.println("Left Split Impurity: " + chosenSplit.left.getImpurity());
-        System.out.println("Right Split Impurity: " + chosenSplit.right.getImpurity());
-        System.out.println();
+            fw.write("Chosen Split Value: " + chosenVar + " = "
+                + chosenSplit.split_valueCat + "\n");
+        fw.write("Left Split Impurity: " + chosenSplit.left.getImpurity()+ "\n");
+        fw.write("Right Split Impurity: " + chosenSplit.right.getImpurity() + "\n");
+        fw.write("\n");
+        } catch(IOException exc) { throw exc; }
 
         // Continue splitting node if conditions are met.
         if((chosenSplit.left.node_data.length >= num_observations) &
                 (chosenSplit.left.getImpurity() > 0.0))
-            chosenSplit.left.chooseSplit(variables, num_observations);
+           chosenSplit.left.chooseSplit(variables, num_observations, fw);
         else {
-            // If splitting conditions not met, output terminal node information.
+            try {
+           // If splitting conditions not met, output terminal node information.
             chosenSplit.left.node_name = chosenSplit.left.node_name + "terminal";
-            System.out.println("Node name: " + chosenSplit.left.node_name 
-                    + " Impurity: " + chosenSplit.left.impurity +
-                    " Observations: " + chosenSplit.left.node_data.length);
-            System.out.println();
+            fw.write("Node name: " + chosenSplit.left.node_name 
+               + " Impurity: " + chosenSplit.left.impurity +
+               " Observations: " + chosenSplit.left.node_data.length + "\n");
+            fw.write("Assigned Category: " + chosenSplit.left.assignedCat() + "\n");
+            fw.write("\n");
+            // Sum up misclassification probability.
+            misclass_prob += chosenSplit.left.pMisclass(chosenSplit.left.assignedCat());
+            } catch(IOException exc) { throw exc; }
         }
         if((chosenSplit.right.node_data.length >= num_observations) &
                 (chosenSplit.right.getImpurity() > 0.0))
-            chosenSplit.right.chooseSplit(variables, num_observations);
+            chosenSplit.right.chooseSplit(variables, num_observations, fw);
         else {
+            try {
             // If splitting conditions not met, output terminal node information.
             chosenSplit.right.node_name = chosenSplit.right.node_name + "terminal";
-            System.out.println("Node name: " + chosenSplit.right.node_name
-                    + " Impurity: " + chosenSplit.right.impurity +
-                    " Observations: " + chosenSplit.right.node_data.length);
-            System.out.println();
-        }
+            fw.write("Node name: " + chosenSplit.right.node_name
+               + " Impurity: " + chosenSplit.right.impurity +
+               " Observations: " + chosenSplit.right.node_data.length + "\n");
+            fw.write("Assigned Category: " + chosenSplit.right.assignedCat() + "\n");
+            fw.write("\n");
+            // Sum up misclassification probability.
+            misclass_prob += chosenSplit.right.pMisclass(
+                    chosenSplit.right.assignedCat());
+            } catch(IOException exc) { throw exc; }
+         }
+        } catch(IOException exc) { throw exc; }
     }
 }
 
@@ -436,6 +476,16 @@ class TitanicClassTreeBuilder {
         Node root = new Node(data, "root");
 
         // Begin splitting.
-        root.chooseSplit(variableList, 10);
+        try(FileWriter fw = new FileWriter("model1.txt", true)) {
+            root.chooseSplit(variableList, 5, fw);
+            // Show misclassification probability.
+            fw.write("Misclassification probability for model: " 
+                    + Node.misclass_prob);
+            fw.close();
+        } catch(IOException exc) {
+            System.out.println(exc);
+        }
+
+
     }
 }
