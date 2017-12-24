@@ -71,7 +71,10 @@ class Classify {
         Variable[] variable_list = var_list;
         // Flag that indicates when node has been found.
         int node_name_found = 0;
-        Integer terminal_node_found = 0;
+        // Flag that indicates when terminal node is reached.
+        int terminal_node_found = 0;
+        // Flag that indicates if split value is missing.
+        int missing_value = 0;
 
         try (BufferedReader br =
                 new BufferedReader(new FileReader(model_file)))
@@ -123,22 +126,38 @@ class Classify {
             count++;
          }
 
+         // Check if observation is missing value that is being split on in node.
+         if(data[row][split_column].compareTo("") == 0)
+             missing_value = 1;
+
          // If value is numerical, split using '<'
          if(split_type_cat.compareTo("numerical") == 0) {
-             ob_num = Double.parseDouble(data[row][split_column]);
-             split_num = Double.parseDouble(split_value);
-             if(ob_num < split_num)
-                new_node = node + "1";
-             else
-                new_node = node + "0";
+             if(missing_value == 1) {
+                 new_node = node + "1";
+                 missing_value = 0;
+             }
+             else {
+                ob_num = Double.parseDouble(data[row][split_column]);
+                split_num = Double.parseDouble(split_value);
+                if(ob_num < split_num) 
+                    new_node = node + "1";
+                else
+                    new_node = node + "0";
+            }
          }
          // If value is categorical, split using '='
          else {
-             ob_val = data[row][split_column];
-             if(ob_val.compareTo(split_value) == 0)
+             if(missing_value == 1) {
                  new_node = node + "1";
-             else
+                 missing_value = 0;
+             }
+             else {
+                ob_val = data[row][split_column];
+                if(ob_val.compareTo(split_value) == 0)
+                 new_node = node + "1";
+                else
                  new_node = node + "0";
+             }
          }
          
          // Call observation() again with name of new node.  Will keep calling
