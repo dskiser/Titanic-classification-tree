@@ -9,6 +9,7 @@ class MetaData {
     int[] split_vars; // list of columns that will be split on
     String[] split_vars_types; // types of the variables that will be split on
 
+    // Metadata for training set.
     MetaData(int key_column, int response_column, int[] splitting_variables,
            String[] splitting_var_types) {
         key = key_column;
@@ -16,9 +17,18 @@ class MetaData {
         split_vars = splitting_variables;
         split_vars_types = splitting_var_types;
     }
+
+    // Metadata for test set.
+    MetaData(int key_column, int[] splitting_variables,
+           String[] splitting_var_types) {
+        key = key_column;
+        split_vars = splitting_variables;
+        split_vars_types = splitting_var_types;
+    }
+
 }
 
-// Create Observation objects.
+// Create Observation object for training data.
 class Observation {
     String[] row; // stores all the values of the line
     String[] split_variables; // stores only the values that will be split on
@@ -56,14 +66,17 @@ class ReadCSV {
                 line = s.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
                 // Check for null values in line.
                 for(int x : TreeDemo.metadata.split_vars)
-                    if(line[x].compareTo("") == 0) null_value = 1;
+                    if(line[x].compareTo("") == 0) null_value = x;
                 // If no null values, create Observation object and add it
                 // to observations list.
                 if(null_value == 0) {
                     Observation observation = new Observation(line);
                     observations.add(observation);
                 }
-                else null_value = 0; // reset null_value indicator
+                else {
+                    System.out.println("Missing value from column: " + null_value);
+                    null_value = 0; // reset null_value indicator
+                }
             }
         } catch(IOException exc) {
             System.out.println(exc);
@@ -117,6 +130,8 @@ class Node {
     double impurity; // impurity of the tree
     double classONE, classZERO, classALL; // counts of observation classes
     TwoDArrayList splitVals;
+    String default_split; // stores the node (left or right) that observations 
+                          // should be sent to if it is missing the split value
 
     Node(ArrayList<Observation> node_observations, String node_name) {
         observations = node_observations;
@@ -126,6 +141,7 @@ class Node {
         classALL = observations.toArray().length;
         impurity = this.calcImpurity(observations, classONE, classALL);
         splitVals = this.findSplitVals(observations);
+        default_split = "left";
     }
 
     private double countClass(double classNUM, ArrayList<Observation> obs) {
@@ -179,6 +195,9 @@ class Node {
 
             // Output terminal node information.
             fw.write("#" + name + "\n");
+            fw.write("Total: " + classALL + " Survived: " + classONE +
+                    " Died: " + classZERO + "\n");
+            fw.write("Impurity: " + impurity + "\n");
             if(classONE >= classZERO) fw.write("^1\n");
             else fw.write("^0\n"); // If number in classification 1 greater than
                                  // classification 0, assign to 1, and vice versa
@@ -237,6 +256,13 @@ class Node {
                             gini = new_gini;
                             left = proposed_left;
                             right = proposed_right;
+                            // If right node has more observations than left node,
+                            // make right node the default split if split value is 
+                            // missing.  Otherwise, default is left.
+                            if(right.observations.size() > left.observations.size())
+                                default_split = "right";
+                            else
+                                default_split = "left";
                             split_value_used = Double.toString(split_value);
                             index_of_variable_used = p;
                         }
@@ -290,6 +316,12 @@ class Node {
                                 gini = new_gini;
                                 left = proposed_left;
                                 right = proposed_right;
+                                // If right node has more observations than left 
+                                // node, make right node the default split if split                                 // value is missing.  Otherwise, default is left.
+                                if(right.observations.size() > 
+                                        left.observations.size())
+                                    default_split = "right";
+
                                 split_value_used = split_value;
                                 index_of_variable_used = p;
                             }
@@ -299,8 +331,12 @@ class Node {
             }
             // Output information of node that has just been split.
             fw.write("#" + name + "\n");
+            fw.write("Total: " + classALL + " Survived: " + classONE
+                    + " Died: " + classZERO + "\n");
+            fw.write("Impurity: " + impurity + "\n");
             fw.write("$" + index_of_variable_used + "\n");
             fw.write("%" + split_value_used + "\n");
+            fw.write("*" + default_split + "\n");
             fw.write("\n");
             // At this point, nodes declared left and right are kept.
             // Split nodes again.
@@ -335,7 +371,7 @@ class TreeDemo {
         Node root = new Node(observations, "root");
 
         // Write model file.
-        try(FileWriter fw = new FileWriter("model8.txt", true)) {
+        try(FileWriter fw = new FileWriter("model22.txt", true)) {
 
             // Showing root node information.
             fw.write("Total observations without missing values: " + 
