@@ -1,4 +1,5 @@
 *.class
 .TitanicClassTree*
 *.txt
-
+models
+submissions
