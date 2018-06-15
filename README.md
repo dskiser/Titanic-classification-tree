@@ -1,6 +1,6 @@
-# Titanic Classification Tree
+# Titanic Decision Tree (a Christmas break project)
 
-This is an attempt to create a classification tree in Java that can be used to predict the passengers who survived the sinking of the Titanic. The training data set used is from Kaggle.com.
+I used the Titanic data set on Kaggle.com as a test data set for implementing a decision tree from scratch using Java.  The purpose of this project was to practice using Java and to become more familiar with the details of the decision tree learning algorithm.
 
 TreeDemo.java grows the tree.  It requires the file train.csv https://www.kaggle.com/c/titanic/data, with the header removed.
 

@@ -175,7 +175,7 @@ class TestTreeDemo {
         metadata = new MetaData(0, split_column_nums, split_column_types);
 
         // Convert CSV file into a list of TestObservation objects.
-        observations = ReadTestCSV.readTestCSV("test_wo_header.csv");
+        observations = ReadTestCSV.readTestCSV("data/test_wo_header.csv");
 
         // Run observations through model and write submission file.
         try(FileWriter fw = new FileWriter(submission_file, true)) {

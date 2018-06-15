@@ -352,7 +352,7 @@ class TreeDemo {
     public static MetaData metadata;
 
     // Define criterion to make node a terminal node.
-    public static int stop_size = 125;
+    public static int stop_size = 200;
 
     public static void main(String args[]) {
         ArrayList<Observation> observations;
@@ -364,14 +364,14 @@ class TreeDemo {
         metadata = new MetaData(0, 1, split_column_nums, split_column_types); 
 
         // Convert CSV file into a list of Observation objects.
-        observations = ReadCSV.readCSV("train_wo_header.csv");
+        observations = ReadCSV.readCSV("data/estimated_ages2.csv");
         
         
         // Create root node.
         Node root = new Node(observations, "root");
 
         // Write model file.
-        try(FileWriter fw = new FileWriter("model22.txt", true)) {
+        try(FileWriter fw = new FileWriter("model32.txt", true)) {
 
             // Showing root node information.
             fw.write("Total observations without missing values: " + 
